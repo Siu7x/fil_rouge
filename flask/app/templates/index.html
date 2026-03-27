@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ymmo — Biens immobiliers</title>
+    <link rel="stylesheet" href="../static/style.css">
+</head>
+<body>
+
+    <header>
+        <div class="header-inner">
+            <h1>Ymmo</h1>
+            <p>Trouvez votre bien immobilier</p>
+        </div>
+    </header>
+
+    <main>
+        <!-- Filtres -->
+        <form class="filters" method="GET" action="/">
+            <input
+                type="text"
+                name="ville"
+                placeholder="Ville..."
+                value="{{ ville }}"
+            >
+            <select name="type">
+                <option value="">Tous les types</option>
+                <option value="appartement" {% if type_bien == 'appartement' %}selected{% endif %}>Appartement</option>
+                <option value="maison" {% if type_bien == 'maison' %}selected{% endif %}>Maison</option>
+                <option value="bureau" {% if type_bien == 'bureau' %}selected{% endif %}>Bureau</option>
+                <option value="commerce" {% if type_bien == 'commerce' %}selected{% endif %}>Commerce</option>
+                <option value="terrain" {% if type_bien == 'terrain' %}selected{% endif %}>Terrain</option>
+            </select>
+            <input
+                type="number"
+                name="prix_max"
+                placeholder="Prix max (€)"
+                value="{{ prix_max }}"
+            >
+            <button type="submit">Rechercher</button>
+            <a href="/" class="reset">Réinitialiser</a>
+        </form>
+
+        <!-- Résultats -->
+        <p class="resultats">{{ biens|length }} bien(s) trouvé(s)</p>
+
+        <div class="grid">
+            {% for bien in biens %}
+            <div class="card">
+                <div class="card-image">
+                    <span class="tag">{{ bien.type }}</span>
+                    {% if bien.photos %}
+                    <img src="{{ bien.photos[0].url }}" alt="{{ bien.titre }}">
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <h2>{{ bien.titre }}</h2>
+                    <p class="ville">{{ bien.ville }}</p>
+                    {% if bien.surface %}
+                    <p class="detail">{{ bien.surface }} m²
+                        {% if bien.nb_pieces %} · {{ bien.nb_pieces }} pièces{% endif %}
+                    </p>
+                    {% endif %}
+                    <p class="description">{{ bien.description }}</p>
+                    <div class="card-footer">
+                        <span class="prix">{{ "{:,.0f}".format(bien.prix) }} €</span>
+                        <span class="statut disponible">{{ bien.statut }}</span>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <p class="empty">Aucun bien ne correspond à votre recherche.</p>
+            {% endfor %}
+        </div>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,7 @@
+lancer docker:
+
+docker compose up --build
+
+vérifier les données:
+
+SELECT id, titre, ville, prix, statut FROM bien;

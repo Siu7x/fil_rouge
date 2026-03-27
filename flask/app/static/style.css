@@ -1,0 +1,195 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background: #f5f5f0;
+    color: #1a1a1a;
+}
+
+header {
+    background: #1a1a2e;
+    color: white;
+    padding: 32px 24px;
+}
+
+header h1 {
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -1px;
+}
+
+header p {
+    margin-top: 4px;
+    color: #aaa;
+    font-size: 15px;
+}
+
+main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 32px 24px;
+}
+
+.filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+    background: white;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+
+.filters input,
+.filters select {
+    padding: 10px 14px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 14px;
+    flex: 1;
+    min-width: 160px;
+    background: #fafafa;
+}
+
+.filters button {
+    padding: 10px 24px;
+    background: #1a1a2e;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.filters button:hover {
+    background: #2d2d4e;
+}
+
+.filters .reset {
+    padding: 10px 16px;
+    color: #666;
+    text-decoration: none;
+    font-size: 14px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    display: flex;
+    align-items: center;
+}
+
+.resultats {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.card-image {
+    height: 160px;
+    background: linear-gradient(135deg, #1a1a2e, #2d2d4e);
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 12px;
+    overflow: hidden;
+}
+
+.card-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.7;
+}
+
+.tag {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    text-transform: capitalize;
+}
+
+.card-body {
+    padding: 16px;
+}
+
+.card-body h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.ville {
+    font-size: 13px;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.detail {
+    font-size: 13px;
+    color: #888;
+    margin-bottom: 8px;
+}
+
+.description {
+    font-size: 13px;
+    color: #555;
+    line-height: 1.5;
+    margin-bottom: 16px;
+}
+
+.card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #f0f0f0;
+    padding-top: 12px;
+}
+
+.prix {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+}
+
+.statut.disponible {
+    font-size: 12px;
+    background: #e6f4ea;
+    color: #1e7e34;
+    padding: 4px 10px;
+    border-radius: 20px;
+}
+
+.empty {
+    color: #888;
+    font-size: 15px;
+    grid-column: 1/-1;
+    text-align: center;
+    padding: 40px;
+}

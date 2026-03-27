@@ -38,6 +38,7 @@ class Bien(db.Model):
     agence_id   = db.Column(db.Integer, db.ForeignKey('agence.id'), nullable=True)
     agent_id    = db.Column(db.Integer, db.ForeignKey('utilisateur.id'), nullable=True)
     cree_le     = db.Column(db.DateTime, default=datetime.utcnow)
+    photos = db.relationship('Photo', backref='bien', lazy=True)
 
 class Annonce(db.Model):
     __tablename__ = 'annonce'
