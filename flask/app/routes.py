@@ -6,12 +6,10 @@ main = Blueprint('main', __name__)
 
 @main.route('/')
 def index():
-    # Récupération des filtres depuis l'URL
     ville = request.args.get('ville', '')
     type_bien = request.args.get('type', '')
     prix_max = request.args.get('prix_max', '')
 
-    # Construction de la requête avec filtres
     query = Bien.query.filter_by(statut='disponible')
 
     if ville:
@@ -23,3 +21,13 @@ def index():
 
     biens = query.all()
     return render_template('index.html', biens=biens, ville=ville, type_bien=type_bien, prix_max=prix_max)
+
+@main.route('/stats')
+def stats():
+    biens = Bien.query.all()
+    
+    villes = {}
+    for b in biens:
+        villes[b.ville] = villes.get(b.ville, 0) + 1
+
+    return render_template('stats.html', villes=villes)

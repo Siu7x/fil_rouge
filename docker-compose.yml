@@ -3,7 +3,7 @@ services:
   db:
     image: mariadb:11
     container_name: ymmo_db
-    restart: unless-stopped
+    restart: always
     env_file: .env
     environment:
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
@@ -24,7 +24,7 @@ services:
   flask:
     build: ./flask
     container_name: ymmo_flask
-    restart: unless-stopped
+    restart: always
     env_file: .env
     volumes:
       - ./flask:/app
