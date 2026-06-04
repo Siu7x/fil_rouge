@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ymmo — Connexion</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .login-wrap { max-width: 400px; margin: 80px auto; padding: 0 20px; }
+        .login-card { background: white; border-radius: 12px; padding: 32px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .login-card h2 { font-size: 22px; margin-bottom: 24px; color: #1a1a2e; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 13px; color: #555; margin-bottom: 6px; }
+        .form-group input { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; }
+        .btn-login { width: 100%; padding: 12px; background: #1a1a2e; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; margin-top: 8px; }
+        .btn-login:hover { background: #2d2d4e; }
+        .error { color: #c0392b; font-size: 13px; margin-bottom: 12px; }
+        .back { display: block; text-align: center; margin-top: 16px; font-size: 13px; color: #888; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-inner">
+            <h1>Ymmo</h1>
+            <p>Espace compte</p>
+        </div>
+    </header>
+    <div class="login-wrap">
+        <div class="login-card">
+            <h2>Se connecter</h2>
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}
+                    <p class="error">{{ messages[0] }}</p>
+                {% endif %}
+            {% endwith %}
+            <form method="POST">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" name="email" placeholder="admin@ymmo.fr" required>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" name="password" required>
+                </div>
+                <button type="submit" class="btn-login">Se connecter</button>
+            </form>
+            <a href="/" class="back">Retour</a>
+        </div>
+    </div>
+</body>
+</html>

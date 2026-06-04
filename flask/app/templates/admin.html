@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ymmo — Admin</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .admin-header { background: #1a1a2e; color: white; padding: 16px 24px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-header h1 { font-size: 20px; }
+        .admin-header a { color: #aaa; text-decoration: none; font-size: 13px; }
+        .admin-header a:hover { color: white; }
+        .admin-main { max-width: 1200px; margin: 0 auto; padding: 24px; }
+        .admin-title { font-size: 18px; font-weight: 500; margin-bottom: 20px; color: #1a1a2e; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        th { background: #1a1a2e; color: white; padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 500; }
+        td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f0f0f0; color: #333; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafafa; }
+        .badge { padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+        .badge-disponible { background: #e6f4ea; color: #1e7e34; }
+        .badge-vendu      { background: #fdecea; color: #c0392b; }
+        .badge-loue       { background: #fff3cd; color: #856404; }
+        .badge-archive    { background: #f0f0f0; color: #666; }
+        .btn-edit { padding: 5px 12px; background: #1a1a2e; color: white; border-radius: 6px; text-decoration: none; font-size: 12px; }
+        .btn-edit:hover { background: #2d2d4e; }
+        .btn-delete { padding: 5px 12px; background: #c0392b; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .btn-delete:hover { background: #a93226; }
+        .actions { display: flex; gap: 6px; }
+        .stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+        .stat { background: white; border-radius: 10px; padding: 16px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .stat-num { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+        .stat-label { font-size: 12px; color: #888; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <h1>Ymmo — Panel Admin</h1>
+        <div style="display:flex;gap:20px;align-items:center">
+            <a href="/">Retour</a>
+            <a href="/logout">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="admin-main">
+
+        <!-- Stats -->
+        <div class="stats-bar">
+            <div class="stat">
+                <div class="stat-num">{{ biens|length }}</div>
+                <div class="stat-label">Total biens</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">{{ biens|selectattr('statut','equalto','disponible')|list|length }}</div>
+                <div class="stat-label">Disponibles</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">{{ biens|selectattr('statut','equalto','vendu')|list|length }}</div>
+                <div class="stat-label">Vendus</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">{{ biens|selectattr('statut','equalto','loue')|list|length }}</div>
+                <div class="stat-label">Loués</div>
+            </div>
+        </div>
+
+        <p class="admin-title">Gestion des biens ({{ biens|length }})</p>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Titre</th>
+                    <th>Type</th>
+                    <th>Ville</th>
+                    <th>Prix</th>
+                    <th>Surface</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for bien in biens %}
+                <tr>
+                    <td>{{ bien.id }}</td>
+                    <td>{{ bien.titre }}</td>
+                    <td>{{ bien.type }}</td>
+                    <td>{{ bien.ville }}</td>
+                    <td>{{ "{:,.0f}".format(bien.prix) }} €</td>
+                    <td>{% if bien.surface %}{{ bien.surface }} m²{% endif %}</td>
+                    <td><span class="badge badge-{{ bien.statut }}">{{ bien.statut }}</span></td>
+                    <td>
+                        <div class="actions">
+                            <a href="/admin/bien/{{ bien.id }}/edit" class="btn-edit">Modifier</a>
+                            <form method="POST" action="/admin/bien/{{ bien.id }}/delete" onsubmit="return confirm('Supprimer ce bien ?')">
+                                <button type="submit" class="btn-delete">Supprimer</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Section offres -->
+        <p class="admin-title" style="margin-top:40px">Offres reçues ({{ offres|length }})</p>
+        <table>
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Bien</th>
+                    <th>Client</th>
+                    <th>Montant</th>
+                    <th>Message</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for offre in offres %}
+                <tr>
+                    <td>{{ offre.id }}</td>
+                    <td>{{ offre.bien.titre }}</td>
+                    <td>{{ offre.client.prenom }} {{ offre.client.nom }}</td>
+                    <td><strong>{{ "{:,.0f}".format(offre.montant) }} €</strong></td>
+                    <td>{{ offre.message or '—' }}</td>
+                    <td><span class="badge badge-{{ offre.statut }}">{{ offre.statut|replace('_',' ') }}</span></td>
+                    <td>
+                        <div class="actions">
+                            {% if offre.statut == 'en_attente' %}
+                            <form method="POST" action="/admin/offre/{{ offre.id }}/acceptee">
+                                <button type="submit" style="padding:5px 10px;background:#1e7e34;color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Accepter</button>
+                            </form>
+                            <form method="POST" action="/admin/offre/{{ offre.id }}/refusee">
+                                <button type="submit" style="padding:5px 10px;background:#c0392b;color:white;border:none;border-radius:6px;font-size:12px;cursor:pointer;">Refuser</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" style="text-align:center;color:#888;padding:24px;">Aucune offre reçue</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</body>
+</html>

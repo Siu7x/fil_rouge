@@ -22,6 +22,8 @@ class Utilisateur(db.Model):
     telephone    = db.Column(db.String(20))
     agence_id    = db.Column(db.Integer, db.ForeignKey('agence.id'), nullable=True)
     cree_le      = db.Column(db.DateTime, default=datetime.utcnow)
+    favoris      = db.relationship('Favori', backref='client', lazy=True)
+    offres       = db.relationship('Offre', backref='client', lazy=True)
 
 class Bien(db.Model):
     __tablename__ = 'bien'
@@ -38,7 +40,9 @@ class Bien(db.Model):
     agence_id   = db.Column(db.Integer, db.ForeignKey('agence.id'), nullable=True)
     agent_id    = db.Column(db.Integer, db.ForeignKey('utilisateur.id'), nullable=True)
     cree_le     = db.Column(db.DateTime, default=datetime.utcnow)
-    photos = db.relationship('Photo', backref='bien', lazy=True)
+    photos      = db.relationship('Photo', backref='bien', lazy=True)
+    favoris     = db.relationship('Favori', backref='bien', lazy=True)
+    offres      = db.relationship('Offre', backref='bien', lazy=True)
 
 class Annonce(db.Model):
     __tablename__ = 'annonce'
@@ -64,3 +68,28 @@ class Transaction(db.Model):
     bien_id     = db.Column(db.Integer, db.ForeignKey('bien.id'), nullable=False)
     acheteur_id = db.Column(db.Integer, db.ForeignKey('utilisateur.id'), nullable=True)
     agent_id    = db.Column(db.Integer, db.ForeignKey('utilisateur.id'), nullable=True)
+
+class Favori(db.Model):
+    __tablename__ = 'favori'
+    id        = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('utilisateur.id'), nullable=False)
+    bien_id   = db.Column(db.Integer, db.ForeignKey('bien.id'), nullable=False)
+    cree_le   = db.Column(db.DateTime, default=datetime.utcnow)
+
+class Offre(db.Model):
+    __tablename__ = 'offre'
+    id        = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('utilisateur.id'), nullable=False)
+    bien_id   = db.Column(db.Integer, db.ForeignKey('bien.id'), nullable=False)
+    montant   = db.Column(db.Numeric(12,2), nullable=False)
+    message   = db.Column(db.Text)
+    statut    = db.Column(db.Enum('en_attente','acceptee','refusee'), default='en_attente')
+    cree_le   = db.Column(db.DateTime, default=datetime.utcnow)
+
+class BienVu(db.Model):
+    __tablename__ = 'bien_vu'
+    id        = db.Column(db.Integer, primary_key=True)
+    client_id = db.Column(db.Integer, db.ForeignKey('utilisateur.id'), nullable=False)
+    bien_id   = db.Column(db.Integer, db.ForeignKey('bien.id'), nullable=False)
+    vu_le     = db.Column(db.DateTime, default=datetime.utcnow)
+    bien      = db.relationship('Bien', backref='vus', lazy=True)

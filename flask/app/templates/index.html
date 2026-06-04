@@ -3,77 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ymmo</title>
-    <link rel="stylesheet" href="../static/style.css">
+    <title>Ymmo - Immobilier</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .btn-favori-card {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            background: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2;
+            transition: transform 0.15s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .btn-favori-card:hover { transform: scale(1.1); }
+        .card-link { text-decoration: none; color: inherit; display: block; }
+    </style>
 </head>
 <body>
 
     <header>
         <div class="header-inner">
-            <h1>Ymmo</h1>
-            <p>Trouvez votre bien immobilier</p>
+            <div>
+                <h1>Ymmo</h1>
+                <p>Immobilier - Agences & Biens</p>
+            </div>
+            {% if session.get('user_role') == 'admin' %}
+                <div style="display:flex;gap:12px;align-items:center;font-size:13px;">
+                    <a href="/admin" style="color:rgba(255,255,255,0.8);text-decoration:none;border:1px solid rgba(255,255,255,0.3);padding:8px 14px;border-radius:8px;transition:all 0.2s;background:rgba(255,255,255,0.1);">Panel Admin</a>
+                    <a href="/logout" style="color:rgba(255,255,255,0.8);text-decoration:none;">Déconnexion</a>
+                </div>
+            {% elif session.get('user_role') == 'client' %}
+                <div style="display:flex;gap:12px;align-items:center;font-size:13px;">
+                    <span style="color:rgba(255,255,255,0.8);">{{ session.get('user_nom') }}</span>
+                    <a href="/client" style="color:rgba(255,255,255,0.8);text-decoration:none;border:1px solid rgba(255,255,255,0.3);padding:8px 14px;border-radius:8px;transition:all 0.2s;background:rgba(255,255,255,0.1);">Mon espace</a>
+                    <a href="/logout" style="color:rgba(255,255,255,0.8);text-decoration:none;">Déconnexion</a>
+                </div>
+            {% else %}
+                <a href="/login" style="color:rgba(255,255,255,0.8);text-decoration:none;font-size:13px;border:1px solid rgba(255,255,255,0.3);padding:8px 14px;border-radius:8px;background:rgba(255,255,255,0.1);">Se connecter</a>
+            {% endif %}
         </div>
     </header>
 
     <main>
-        <!-- Filtres -->
         <form class="filters" method="GET" action="/">
-            <input
-                type="text"
-                name="ville"
-                placeholder="Ville..."
-                value="{{ ville }}"
-            >
+            <input type="text" name="ville" placeholder="Ville..." value="{{ ville }}">
             <select name="type">
                 <option value="">Tous les types</option>
                 <option value="appartement" {% if type_bien == 'appartement' %}selected{% endif %}>Appartement</option>
-                <option value="maison" {% if type_bien == 'maison' %}selected{% endif %}>Maison</option>
-                <option value="bureau" {% if type_bien == 'bureau' %}selected{% endif %}>Bureau</option>
-                <option value="commerce" {% if type_bien == 'commerce' %}selected{% endif %}>Commerce</option>
-                <option value="terrain" {% if type_bien == 'terrain' %}selected{% endif %}>Terrain</option>
+                <option value="maison"      {% if type_bien == 'maison' %}selected{% endif %}>Maison</option>
+                <option value="bureau"      {% if type_bien == 'bureau' %}selected{% endif %}>Bureau</option>
             </select>
-            <input
-                type="number"
-                name="prix_max"
-                placeholder="Prix max (€)"
-                value="{{ prix_max }}"
-            >
+            <select name="statut">
+                <option value="">Tous les statuts</option>
+                <option value="disponible" {% if statut == 'disponible' %}selected{% endif %}>Disponible</option>
+                <option value="vendu"      {% if statut == 'vendu' %}selected{% endif %}>Vendu</option>
+                <option value="loue"       {% if statut == 'loue' %}selected{% endif %}>Loué</option>
+            </select>
+            <input type="number" name="prix_max" placeholder="Prix max (€)" value="{{ prix_max }}">
             <button type="submit">Rechercher</button>
             <a href="/" class="reset">Réinitialiser</a>
         </form>
 
-        <!-- Résultats -->
         <p class="resultats">{{ biens|length }} bien(s) trouvé(s)</p>
 
-        <div class="grid">
+        <div class="grid" id="biens-grid">
             {% for bien in biens %}
-            <div class="card">
-                <div class="card-image">
-                    <span class="tag">{{ bien.type }}</span>
-                    {% if bien.photos %}
-                    <img src="{{ bien.photos[0].url }}" alt="{{ bien.titre }}">
-                    {% endif %}
-                </div>
-                <div class="card-body">
-                    <h2>{{ bien.titre }}</h2>
-                    <p class="ville">{{ bien.ville }}</p>
-                    {% if bien.surface %}
-                    <p class="detail">{{ bien.surface }} m²
-                        {% if bien.nb_pieces %} · {{ bien.nb_pieces }} pièces{% endif %}
-                    </p>
-                    {% endif %}
-                    <p class="description">{{ bien.description }}</p>
-                    <div class="card-footer">
-                        <span class="prix">{{ "{:,.0f}".format(bien.prix) }} €</span>
-                        <span class="statut disponible">{{ bien.statut }}</span>
+                {% if loop.index0 < 9 %}
+                <div class="card {% if bien.statut != 'disponible' %}card-indispo{% endif %}">
+                    <div class="card-image">
+                        {% if session.get('user_role') == 'client' %}
+                        <button class="btn-favori-card"
+                                id="fav-{{ bien.id }}"
+                                onclick="event.preventDefault(); toggleFavori({{ bien.id }})"
+                                title="{% if bien.id in favoris_ids %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}">
+                            {{ '❤️' if bien.id in favoris_ids else '🤍' }}
+                        </button>
+                        {% endif %}
+
+                        <span class="tag">{{ bien.type }}</span>
+                        {% if bien.statut != 'disponible' %}
+                        <span class="tag-statut tag-{{ bien.statut }}">
+                            {% if bien.statut == 'vendu' %}Vendu{% elif bien.statut == 'loue' %}Loué{% else %}{{ bien.statut }}{% endif %}
+                        </span>
+                        {% endif %}
+                        {% if bien.photos %}
+                        <img src="{{ bien.photos[0].url }}" alt="{{ bien.titre }}">
+                        {% else %}
+                        <div style="width:100%;height:200px;background:linear-gradient(135deg,#1a1a2e,#2d2d4e);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px;">
+                            📷 Image non disponible
+                        </div>
+                        {% endif %}
                     </div>
+
+                    <a href="/bien/{{ bien.id }}" class="card-link">
+                        <div class="card-body">
+                            <h2>{{ bien.titre }}</h2>
+                            <p class="ville">{{ bien.ville }}</p>
+                            {% if bien.surface %}
+                            <p class="detail">{{ bien.surface }} m²{% if bien.nb_pieces %} · {{ bien.nb_pieces }} pièces{% endif %}</p>
+                            {% endif %}
+                            <p class="description">{{ bien.description }}</p>
+                            <div class="card-footer">
+                                <span class="prix">{{ "{:,.0f}".format(bien.prix) }} €</span>
+                                <span class="statut {{ bien.statut }}">{{ bien.statut }}</span>
+                            </div>
+                        </div>
+                    </a>
                 </div>
-            </div>
+                {% endif %}
             {% else %}
             <p class="empty">Aucun bien ne correspond à votre recherche.</p>
             {% endfor %}
         </div>
+
+        {% if biens|length > 9 %}
+        <div class="load-more-container">
+            <button class="load-more-btn" id="load-more-btn">Charger plus de biens</button>
+        </div>
+        <script>
+            // Données de tous les biens stockées
+            const allBiens = [
+                {% for bien in biens %}
+                {
+                    id: {{ bien.id }},
+                    titre: "{{ bien.titre | replace('"', '\\"') }}",
+                    type: "{{ bien.type }}",
+                    prix: {{ bien.prix }},
+                    surface: {{ bien.surface or 0 }},
+                    nb_pieces: {{ bien.nb_pieces or 0 }},
+                    ville: "{{ bien.ville }}",
+                    description: "{{ bien.description[:100] | replace('"', '\\"') }}...",
+                    statut: "{{ bien.statut }}",
+                    photo_url: "{{ bien.photos[0].url if bien.photos else '/static/uploads/placeholder.svg' }}",
+                    est_favori: {{ 'true' if bien.id in favoris_ids else 'false' }}
+                },
+                {% endfor %}
+            ];
+
+            let currentIndex = 9;
+            const itemsPerLoad = 9;
+
+            function createBienCard(bien) {
+                const statusLabel = bien.statut === 'vendu' ? 'Vendu' : bien.statut === 'loue' ? 'Loué' : bien.statut;
+                return `
+                    <div class="card ${bien.statut !== 'disponible' ? 'card-indispo' : ''}">
+                        <div class="card-image">
+                            {% if session.get('user_role') == 'client' %}
+                            <button class="btn-favori-card" id="fav-${bien.id}" onclick="event.preventDefault(); toggleFavori(${bien.id})" title="${bien.est_favori ? 'Retirer des favoris' : 'Ajouter aux favoris'}">
+                                ${bien.est_favori ? '❤️' : '🤍'}
+                            </button>
+                            {% endif %}
+                            <span class="tag">${bien.type}</span>
+                            ${bien.statut !== 'disponible' ? `<span class="tag-statut tag-${bien.statut}">${statusLabel}</span>` : ''}
+                            ${bien.photo_url && bien.photo_url !== '/static/uploads/placeholder.svg' 
+                                ? `<img src="${bien.photo_url}" alt="${bien.titre}">` 
+                                : `<div style="width:100%;height:200px;background:linear-gradient(135deg,#1a1a2e,#2d2d4e);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);font-size:14px;">📷 Image non disponible</div>`
+                            }
+                        </div>
+                        <a href="/bien/${bien.id}" class="card-link">
+                            <div class="card-body">
+                                <h2>${bien.titre}</h2>
+                                <p class="ville">${bien.ville}</p>
+                                <p class="detail">${bien.surface} m²${bien.nb_pieces ? ` · ${bien.nb_pieces} pièces` : ''}</p>
+                                <p class="description">${bien.description}</p>
+                                <div class="card-footer">
+                                    <span class="prix">€ ${Math.floor(bien.prix).toLocaleString('fr-FR')}</span>
+                                    <span class="statut ${bien.statut}">${bien.statut}</span>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                `;
+            }
+
+            document.getElementById('load-more-btn').addEventListener('click', function() {
+                this.classList.add('loading');
+                this.textContent = 'Chargement...';
+                
+                setTimeout(() => {
+                    const grid = document.getElementById('biens-grid');
+                    const nextBiens = allBiens.slice(currentIndex, currentIndex + itemsPerLoad);
+                    
+                    nextBiens.forEach(bien => {
+                        grid.insertAdjacentHTML('beforeend', createBienCard(bien));
+                    });
+                    
+                    currentIndex += itemsPerLoad;
+                    
+                    if (currentIndex >= allBiens.length) {
+                        this.style.display = 'none';
+                    } else {
+                        this.classList.remove('loading');
+                        this.textContent = 'Charger plus de biens';
+                    }
+                }, 300);
+            });
+        </script>
+        {% endif %}
+
+        <!-- Section Statistiques avec Graphiques -->
+        <section class="statistiques">
+            <div class="stats-header">
+                <h2>Analyse du marché immobilier</h2>
+                <p class="stats-subtitle">Vue d'ensemble des biens et de la volumétrie</p>
+            </div>
+
+            <div class="stats-container">
+                <!-- Colonne gauche : Graphiques -->
+                <div class="stats-charts">
+                    <div class="chart-card">
+                        <h3>Répartition par statut</h3>
+                        <canvas id="chartStatut" height="100"></canvas>
+                    </div>
+                    <div class="chart-card">
+                        <h3>Types de biens</h3>
+                        <canvas id="chartTypes" height="100"></canvas>
+                    </div>
+                </div>
+
+                <!-- Colonne droite : KPIs -->
+                <div class="stats-kpis">
+                    <div class="kpi-card">
+                        <div class="kpi-label">Total de biens</div>
+                        <div class="kpi-value" id="kpi-total">-</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Agences</div>
+                        <div class="kpi-value" id="kpi-agences">-</div>
+                    </div>
+                    <div class="kpi-card">
+                        <div class="kpi-label">Utilisateurs</div>
+                        <div class="kpi-value" id="kpi-users">-</div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="kpi-card highlight">
+                        <div class="kpi-label">Prix minimum</div>
+                        <div class="kpi-value-price" id="kpi-min">-</div>
+                    </div>
+                    <div class="kpi-card highlight">
+                        <div class="kpi-label">Prix maximum</div>
+                        <div class="kpi-value-price" id="kpi-max">-</div>
+                    </div>
+                    <div class="kpi-card highlight">
+                        <div class="kpi-label">Prix moyen</div>
+                        <div class="kpi-value-price" id="kpi-avg">-</div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+    function toggleFavori(bienId) {
+        fetch('/favori/' + bienId + '/toggle', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            const btn = document.getElementById('fav-' + bienId);
+            if (data.status === 'added') {
+                btn.textContent = '❤️';
+                btn.title = 'Retirer des favoris';
+            } else {
+                btn.textContent = '🤍';
+                btn.title = 'Ajouter aux favoris';
+            }
+        });
+    }
+
+    let chartStatut = null;
+    let chartTypes = null;
+
+    // Fonction pour mettre à jour les statistiques
+    function updateStats() {
+        fetch('/api/statistiques')
+            .then(r => r.json())
+            .then(data => {
+                // Mise à jour des KPIs
+                document.getElementById('kpi-total').textContent = data.total_biens;
+                document.getElementById('kpi-agences').textContent = data.total_agences;
+                document.getElementById('kpi-users').textContent = data.total_utilisateurs;
+                document.getElementById('kpi-min').textContent = '€ ' + Math.floor(data.prix_min).toLocaleString('fr-FR');
+                document.getElementById('kpi-max').textContent = '€ ' + Math.floor(data.prix_max).toLocaleString('fr-FR');
+                document.getElementById('kpi-avg').textContent = '€ ' + Math.floor(data.prix_moyen).toLocaleString('fr-FR');
+
+                // Graphique Statut (barres)
+                const statutCtx = document.getElementById('chartStatut');
+                if (chartStatut) chartStatut.destroy();
+                chartStatut = new Chart(statutCtx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['Disponible', 'Vendu', 'Loué'],
+                        datasets: [{
+                            label: 'Nombre de biens',
+                            data: [data.biens_disponibles, data.biens_vendus, data.biens_loues],
+                            backgroundColor: ['#1a1a2e', '#ef4444', '#f97316'],
+                            borderRadius: 6,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: { display: false }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: { color: '#6b7280', font: { size: 12 } },
+                                grid: { color: '#f3f4f6' }
+                            },
+                            x: {
+                                ticks: { color: '#6b7280', font: { size: 12 } },
+                                grid: { display: false }
+                            }
+                        }
+                    }
+                });
+
+                // Graphique Types (camembert)
+                const typesCtx = document.getElementById('chartTypes');
+                if (chartTypes) chartTypes.destroy();
+                const colors = ['#1a1a2e', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+                chartTypes = new Chart(typesCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: data.types.labels,
+                        datasets: [{
+                            data: data.types.values,
+                            backgroundColor: colors.slice(0, data.types.labels.length),
+                            borderColor: '#ffffff',
+                            borderWidth: 3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: true,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    color: '#6b7280',
+                                    font: { size: 12 },
+                                    padding: 12
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(err => console.error('Erreur lors du chargement des stats:', err));
+    }
+
+    // Appel initial au chargement de la page
+    updateStats();
+
+    // Auto-refresh toutes les 30 secondes
+    setInterval(updateStats, 30000);
+    </script>
 
 </body>
 </html>

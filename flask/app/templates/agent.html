@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ymmo — Espace Agent</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .agent-header { background: #1a1a2e; color: white; padding: 16px 24px; display:flex; justify-content:space-between; align-items:center; }
+        .agent-header h1 { font-size: 20px; margin: 0; }
+        .agent-header a { color: #aaa; text-decoration: none; font-size: 13px; }
+        .agent-main { max-width: 1000px; margin: 0 auto; padding: 24px; }
+        .welcome { background: white; border-radius: 12px; padding: 20px 24px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center; }
+        .welcome h2 { font-size: 18px; color: #1a1a2e; margin: 0 0 4px; }
+        .welcome p { color: #666; font-size: 14px; margin: 0; }
+        .stats { display: flex; gap: 12px; }
+        .stat { background: #f5f5f0; border-radius: 10px; padding: 12px 20px; text-align: center; }
+        .stat-num { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+        .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+        .section-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 16px; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        th { background: #1a1a2e; color: white; padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 500; }
+        td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f0f0f0; color: #333; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fafafa; }
+        .badge { padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+        .badge-en_attente { background: #fff3cd; color: #856404; }
+        .badge-acceptee   { background: #e6f4ea; color: #1e7e34; }
+        .badge-refusee    { background: #fdecea; color: #c0392b; }
+        .btn-accept { padding: 5px 12px; background: #1e7e34; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .btn-refuse { padding: 5px 12px; background: #c0392b; color: white; border: none; border-radius: 6px; font-size: 12px; cursor: pointer; }
+        .actions { display: flex; gap: 6px; }
+        .empty-state { background: white; border-radius: 12px; padding: 40px; text-align: center; color: #aaa; font-size: 14px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+    </style>
+</head>
+<body>
+    <div class="agent-header">
+        <h1>Espace Agent — Ymmo</h1>
+        <div style="display:flex;gap:20px">
+            <a href="/">← Voir le site</a>
+            <a href="/logout">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="agent-main">
+
+        <div class="welcome">
+            <div>
+                <h2>Bonjour {{ session.get('user_nom') }} !</h2>
+                <p>Gérez les offres reçues sur vos biens.</p>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-num">{{ offres|length }}</div>
+                    <div class="stat-label">Total offres</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-num">{{ offres|selectattr('statut','equalto','en_attente')|list|length }}</div>
+                    <div class="stat-label">En attente</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-num">{{ offres|selectattr('statut','equalto','acceptee')|list|length }}</div>
+                    <div class="stat-label">Acceptées</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="section-title">Offres reçues ({{ offres|length }})</p>
+
+        {% if offres %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Bien</th>
+                    <th>Ville</th>
+                    <th>Prix affiché</th>
+                    <th>Offre client</th>
+                    <th>Client</th>
+                    <th>Message</th>
+                    <th>Statut</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for offre in offres %}
+                <tr>
+                    <td><a href="/bien/{{ offre.bien.id }}" style="color:#1a1a2e;text-decoration:none;font-weight:500;">{{ offre.bien.titre }}</a></td>
+                    <td>{{ offre.bien.ville }}</td>
+                    <td>{{ "{:,.0f}".format(offre.bien.prix) }} €</td>
+                    <td><strong>{{ "{:,.0f}".format(offre.montant) }} €</strong></td>
+                    <td>{{ offre.client.prenom }} {{ offre.client.nom }}</td>
+                    <td>{{ offre.message or '—' }}</td>
+                    <td><span class="badge badge-{{ offre.statut }}">{{ offre.statut|replace('_',' ') }}</span></td>
+                    <td>
+                        {% if offre.statut == 'en_attente' %}
+                        <div class="actions">
+                            <form method="POST" action="/agent/offre/{{ offre.id }}/acceptee">
+                                <button type="submit" class="btn-accept">Accepter</button>
+                            </form>
+                            <form method="POST" action="/agent/offre/{{ offre.id }}/refusee">
+                                <button type="submit" class="btn-refuse">Refuser</button>
+                            </form>
+                        </div>
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="empty-state">Aucune offre reçue sur vos biens pour le moment.</div>
+        {% endif %}
+
+    </div>
+</body>
+</html>

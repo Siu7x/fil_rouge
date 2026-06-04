@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ymmo — Mon espace</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .client-header { background: #1a1a2e; color: white; padding: 16px 24px; display:flex; justify-content:space-between; align-items:center; }
+        .client-header h1 { font-size: 20px; margin: 0; }
+        .client-header a { color: #aaa; text-decoration: none; font-size: 13px; }
+        .client-main { max-width: 1100px; margin: 0 auto; padding: 24px; }
+        .welcome { background: white; border-radius: 12px; padding: 24px; margin-bottom: 28px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); display:flex; justify-content:space-between; align-items:center; }
+        .welcome h2 { font-size: 20px; color: #1a1a2e; margin-bottom: 4px; }
+        .welcome p { color: #666; font-size: 14px; margin: 0; }
+        .stats { display: flex; gap: 12px; }
+        .stat { background: #f5f5f0; border-radius: 10px; padding: 12px 20px; text-align: center; }
+        .stat-num { font-size: 22px; font-weight: 700; color: #1a1a2e; }
+        .stat-label { font-size: 11px; color: #888; margin-top: 2px; }
+        .section { margin-bottom: 32px; }
+        .section-title { font-size: 16px; font-weight: 600; color: #1a1a2e; margin-bottom: 16px; display:flex; align-items:center; gap:8px; }
+        .mini-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+        .mini-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); text-decoration: none; color: inherit; display: block; transition: transform 0.15s; }
+        .mini-card:hover { transform: translateY(-2px); }
+        .mini-card-img { height: 120px; background: linear-gradient(135deg,#1a1a2e,#2d2d4e); position:relative; overflow:hidden; }
+        .mini-card-img img { width:100%; height:100%; object-fit:cover; opacity:0.8; }
+        .mini-card-body { padding: 12px; }
+        .mini-card-body h3 { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+        .mini-card-body p { font-size: 12px; color: #888; margin: 0; }
+        .mini-card-footer { display:flex; justify-content:space-between; align-items:center; margin-top: 8px; }
+        .mini-prix { font-size: 15px; font-weight: 700; color: #1a1a2e; }
+        .empty-state { background: white; border-radius: 10px; padding: 32px; text-align: center; color: #aaa; font-size: 14px; }
+        .offres-table { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+        .offres-table table { width: 100%; border-collapse: collapse; }
+        .offres-table th { background: #f5f5f0; padding: 12px 16px; text-align: left; font-size: 13px; color: #666; font-weight: 500; }
+        .offres-table td { padding: 12px 16px; font-size: 13px; border-bottom: 1px solid #f0f0f0; }
+        .offres-table tr:last-child td { border-bottom: none; }
+        .badge { padding: 3px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+        .badge-en_attente { background: #fff3cd; color: #856404; }
+        .badge-acceptee   { background: #e6f4ea; color: #1e7e34; }
+        .badge-refusee    { background: #fdecea; color: #c0392b; }
+    </style>
+</head>
+<body>
+    <div class="client-header">
+        <h1>Mon espace Ymmo</h1>
+        <div style="display:flex;gap:20px">
+            <a href="/">← Voir les annonces</a>
+            <a href="/logout">Déconnexion</a>
+        </div>
+    </div>
+
+    <div class="client-main">
+
+        <!-- Bienvenue -->
+        <div class="welcome">
+            <div>
+                <h2>Bonjour {{ session.get('user_nom') }} !</h2>
+                <p>Retrouvez vos favoris, biens consultés et offres en cours.</p>
+            </div>
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-num">{{ biens_favoris|length }}</div>
+                    <div class="stat-label">Favoris</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-num">{{ biens_vus|length }}</div>
+                    <div class="stat-label">Vus</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-num">{{ offres|length }}</div>
+                    <div class="stat-label">Offres</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Favoris -->
+        <div class="section">
+            <p class="section-title">Mes favoris ({{ biens_favoris|length }})</p>
+            {% if biens_favoris %}
+            <div class="mini-grid">
+                {% for bien in biens_favoris %}
+                <a href="/bien/{{ bien.id }}" class="mini-card">
+                    <div class="mini-card-img">
+                        {% if bien.photos %}<img src="{{ bien.photos[0].url }}" alt="">{% endif %}
+                    </div>
+                    <div class="mini-card-body">
+                        <h3>{{ bien.titre }}</h3>
+                        <p>{{ bien.ville }}</p>
+                        <div class="mini-card-footer">
+                            <span class="mini-prix">{{ "{:,.0f}".format(bien.prix) }} €</span>
+                            <span class="statut {{ bien.statut }}" style="font-size:11px;padding:3px 8px;border-radius:20px;">{{ bien.statut }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">Aucun favori pour le moment. Explorez les annonces !</div>
+            {% endif %}
+        </div>
+
+        <!-- Biens vus -->
+        <div class="section">
+            <p class="section-title">Récemment consultés ({{ biens_vus|length }})</p>
+            {% if biens_vus %}
+            <div class="mini-grid">
+                {% for bien in biens_vus %}
+                <a href="/bien/{{ bien.id }}" class="mini-card">
+                    <div class="mini-card-img">
+                        {% if bien.photos %}<img src="{{ bien.photos[0].url }}" alt="">{% endif %}
+                    </div>
+                    <div class="mini-card-body">
+                        <h3>{{ bien.titre }}</h3>
+                        <p>{{ bien.ville }}</p>
+                        <div class="mini-card-footer">
+                            <span class="mini-prix">{{ "{:,.0f}".format(bien.prix) }} €</span>
+                            <span class="statut {{ bien.statut }}" style="font-size:11px;padding:3px 8px;border-radius:20px;">{{ bien.statut }}</span>
+                        </div>
+                    </div>
+                </a>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">Aucun bien consulté pour le moment.</div>
+            {% endif %}
+        </div>
+
+        <!-- Offres -->
+        <div class="section">
+            <p class="section-title">Mes offres ({{ offres|length }})</p>
+            {% if offres %}
+            <div class="offres-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Bien</th>
+                            <th>Ville</th>
+                            <th>Prix affiché</th>
+                            <th>Mon offre</th>
+                            <th>Statut</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for offre in offres %}
+                        <tr>
+                            <td><a href="/bien/{{ offre.bien.id }}" style="color:#1a1a2e;text-decoration:none;font-weight:500;">{{ offre.bien.titre }}</a></td>
+                            <td>{{ offre.bien.ville }}</td>
+                            <td>{{ "{:,.0f}".format(offre.bien.prix) }} €</td>
+                            <td><strong>{{ "{:,.0f}".format(offre.montant) }} €</strong></td>
+                            <td><span class="badge badge-{{ offre.statut }}">{{ offre.statut|replace('_',' ') }}</span></td>
+                            <td>{{ offre.cree_le.strftime('%d/%m/%Y') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="empty-state">Aucune offre envoyée pour le moment.</div>
+            {% endif %}
+        </div>
+
+    </div>
+</body>
+</html>

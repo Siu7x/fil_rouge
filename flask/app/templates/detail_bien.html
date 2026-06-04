@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ bien.titre }} — Ymmo</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        .detail-wrap { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+        .detail-img { width: 100%; height: 400px; object-fit: cover; border-radius: 12px; background: linear-gradient(135deg,#1a1a2e,#2d2d4e); }
+        .detail-body { background: white; border-radius: 12px; padding: 28px; margin-top: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.08); }
+        .detail-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .detail-titre { font-size: 24px; font-weight: 700; color: #1a1a2e; }
+        .detail-prix { font-size: 28px; font-weight: 700; color: #1a1a2e; }
+        .detail-meta { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+        .meta-item { font-size: 14px; color: #555; background: #f5f5f0; padding: 6px 12px; border-radius: 8px; }
+        .detail-desc { font-size: 15px; color: #444; line-height: 1.7; margin-bottom: 24px; }
+        .btn-favori { padding: 10px 20px; border: 2px solid #1a1a2e; background: white; color: #1a1a2e; border-radius: 8px; cursor: pointer; font-size: 14px; }
+        .btn-favori.active { background: #1a1a2e; color: white; }
+        .offre-form { border-top: 1px solid #f0f0f0; padding-top: 24px; margin-top: 24px; }
+        .offre-form h3 { font-size: 18px; margin-bottom: 16px; color: #1a1a2e; }
+        .offre-form input, .offre-form textarea { width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; margin-bottom: 12px; box-sizing: border-box; font-family: inherit; }
+        .btn-offre { padding: 12px 28px; background: #1a1a2e; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+        .btn-offre:hover { background: #2d2d4e; }
+        .flash { background: #e6f4ea; color: #1e7e34; padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+        .back { display: inline-block; margin-bottom: 20px; color: #666; text-decoration: none; font-size: 14px; }
+        .login-prompt { background: #f5f5f0; border-radius: 8px; padding: 16px; text-align: center; font-size: 14px; color: #666; }
+        .login-prompt a { color: #1a1a2e; font-weight: 500; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-inner" style="display:flex;justify-content:space-between;align-items:center">
+            <div><h1>Ymmo</h1><p>Trouvez votre bien immobilier</p></div>
+            {% if session.get('user_role') == 'client' %}
+            <div style="display:flex;gap:12px;align-items:center">
+                <a href="/client" style="color:#aaa;text-decoration:none;font-size:13px;border:1px solid #444;padding:8px 16px;border-radius:8px;">Mon espace</a>
+                <a href="/logout" style="color:#aaa;text-decoration:none;font-size:13px;">Déconnexion</a>
+            </div>
+            {% else %}
+            <a href="/login" style="color:#aaa;text-decoration:none;font-size:13px;border:1px solid #444;padding:8px 16px;border-radius:8px;">Se connecter</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <div class="detail-wrap">
+        <a href="/" class="back">← Retour aux annonces</a>
+
+        {% if bien.photos %}
+        <img src="{{ bien.photos[0].url }}" alt="{{ bien.titre }}" class="detail-img">
+        {% else %}
+        <div class="detail-img"></div>
+        {% endif %}
+
+        <div class="detail-body">
+            {% with messages = get_flashed_messages() %}
+                {% if messages %}<div class="flash">{{ messages[0] }}</div>{% endif %}
+            {% endwith %}
+
+            <div class="detail-header">
+                <div>
+                    <h1 class="detail-titre">{{ bien.titre }}</h1>
+                    <p style="color:#666;margin-top:6px"> {{ bien.adresse }}, {{ bien.ville }}</p>
+                </div>
+                <div style="text-align:right">
+                    <div class="detail-prix">{{ "{:,.0f}".format(bien.prix) }} €</div>
+                    <span class="statut {{ bien.statut }}" style="font-size:13px;padding:4px 10px;border-radius:20px;display:inline-block;margin-top:8px">{{ bien.statut }}</span>
+                </div>
+            </div>
+
+            <div class="detail-meta">
+                <span class="meta-item"> {{ bien.type|capitalize }}</span>
+                {% if bien.surface %}<span class="meta-item"> {{ bien.surface }} m²</span>{% endif %}
+                {% if bien.nb_pieces %}<span class="meta-item"> {{ bien.nb_pieces }} pièces</span>{% endif %}
+            </div>
+
+            <p class="detail-desc">{{ bien.description }}</p>
+
+            {% if session.get('user_role') == 'client' %}
+                <!-- Bouton favori -->
+                <button class="btn-favori {% if est_favori %}active{% endif %}"
+                        id="btn-favori"
+                        onclick="toggleFavori({{ bien.id }})">
+                    {% if est_favori %}Retirer des favoris{% else %}Ajouter aux favoris{% endif %}
+                </button>
+
+                <!-- Formulaire offre -->
+                {% if bien.statut == 'disponible' %}
+                <div class="offre-form">
+                    <h3>Faire une offre</h3>
+                    <form method="POST" action="/bien/{{ bien.id }}/offre">
+                        <input type="number" name="montant" placeholder="Votre offre (€)"
+                               value="{{ bien.prix }}" required>
+                        <textarea name="message" placeholder="Message pour l'agent (optionnel)" rows="3"></textarea>
+                        <button type="submit" class="btn-offre">Envoyer l'offre</button>
+                    </form>
+                </div>
+                {% endif %}
+
+            {% else %}
+            <div class="login-prompt">
+                <a href="/login">Connectez-vous</a> pour ajouter ce bien à vos favoris ou faire une offre.
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+    function toggleFavori(bienId) {
+        fetch('/favori/' + bienId + '/toggle', { method: 'POST' })
+        .then(r => r.json())
+        .then(data => {
+            const btn = document.getElementById('btn-favori');
+            if (data.status === 'added') {
+                btn.textContent = 'Retirer des favoris';
+                btn.classList.add('active');
+            } else {
+                btn.textContent = 'Ajouter aux favoris';
+                btn.classList.remove('active');
+            }
+        });
+    }
+    </script>
+</body>
+</html>
