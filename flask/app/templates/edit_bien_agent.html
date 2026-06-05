@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ymmo — Modifier un bien</title>
+    <link rel="stylesheet" href="/static/style.css">
+    <style>
+        * { box-sizing: border-box; }
+
+        .agent-header {
+            background: #1a1a2e;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .agent-header h1 { font-size: 20px; margin: 0; }
+        .agent-header a { color: #aaa; text-decoration: none; font-size: 13px; transition: color .15s; }
+        .agent-header a:hover { color: white; }
+
+        .edit-main { max-width: 760px; margin: 0 auto; padding: 32px 24px; }
+
+        .breadcrumb {
+            font-size: 13px;
+            color: #888;
+            margin-bottom: 24px;
+        }
+        .breadcrumb a { color: #1a1a2e; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb span { margin: 0 6px; }
+
+        .edit-card {
+            background: white;
+            border-radius: 14px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+        .edit-card-header {
+            background: #1a1a2e;
+            color: white;
+            padding: 18px 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .edit-card-header h2 { font-size: 16px; margin: 0; font-weight: 500; }
+        .bien-id-badge {
+            background: rgba(255,255,255,0.15);
+            color: rgba(255,255,255,0.8);
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+
+        .edit-body { padding: 28px 24px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+        }
+        .form-grid .full { grid-column: 1 / -1; }
+
+        .form-group { display: flex; flex-direction: column; gap: 6px; }
+        .form-group label {
+            font-size: 12px;
+            font-weight: 500;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+        }
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            padding: 10px 14px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            color: #1a1a2e;
+            background: #fafafa;
+            transition: border-color .15s, background .15s;
+            font-family: inherit;
+        }
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #1a1a2e;
+            background: white;
+        }
+        .form-group textarea { resize: vertical; min-height: 100px; }
+
+        .divider {
+            border: none;
+            border-top: 1px solid #f0f0f0;
+            margin: 24px 0;
+        }
+
+        .form-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding-top: 8px;
+        }
+        .btn-save {
+            padding: 10px 28px;
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background .15s;
+        }
+        .btn-save:hover { background: #2d2d4e; }
+        .btn-cancel {
+            padding: 10px 20px;
+            background: none;
+            color: #666;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            text-decoration: none;
+            transition: background .15s, border-color .15s;
+        }
+        .btn-cancel:hover { background: #f5f5f5; border-color: #bbb; }
+
+        /* Indicateur de statut dans le select */
+        .statut-preview {
+            display: inline-block;
+            padding: 3px 9px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+        .statut-disponible { background: #e6f4ea; color: #1e7e34; }
+        .statut-vendu      { background: #fdecea; color: #c0392b; }
+        .statut-loue       { background: #fff3cd; color: #856404; }
+    </style>
+</head>
+<body>
+
+<div class="agent-header">
+    <h1>Espace Agent — Ymmo</h1>
+    <div style="display:flex;gap:20px;align-items:center">
+        <a href="/agent">← Retour</a>
+        <a href="/logout">Déconnexion</a>
+    </div>
+</div>
+
+<div class="edit-main">
+
+    <div class="breadcrumb">
+        <a href="/agent">Mon espace</a>
+        <span>›</span>
+        Modifier le bien #{{ bien.id }}
+    </div>
+
+    <div class="edit-card">
+        <div class="edit-card-header">
+            <h2>Modifier le bien</h2>
+            <span class="bien-id-badge">#{{ bien.id }}</span>
+        </div>
+
+        <div class="edit-body">
+            <form method="POST">
+
+                <div class="form-grid">
+
+                    <!-- Titre -->
+                    <div class="form-group full">
+                        <label>Titre de l'annonce</label>
+                        <input type="text" name="titre" value="{{ bien.titre }}" required>
+                    </div>
+
+                    <!-- Type -->
+                    <div class="form-group">
+                        <label>Type de bien</label>
+                        <select name="type">
+                            <option value="appartement" {% if bien.type == 'appartement' %}selected{% endif %}>Appartement</option>
+                            <option value="maison"      {% if bien.type == 'maison'      %}selected{% endif %}>Maison</option>
+                            <option value="bureau"      {% if bien.type == 'bureau'      %}selected{% endif %}>Bureau</option>
+                            <option value="commerce"    {% if bien.type == 'commerce'    %}selected{% endif %}>Commerce</option>
+                        </select>
+                    </div>
+
+                    <!-- Statut -->
+                    <div class="form-group">
+                        <label>Statut</label>
+                        <select name="statut" id="statut-select" onchange="updateStatutPreview()">
+                            <option value="disponible" {% if bien.statut == 'disponible' %}selected{% endif %}>Disponible</option>
+                            <option value="vendu"      {% if bien.statut == 'vendu'      %}selected{% endif %}>Vendu</option>
+                            <option value="loue"       {% if bien.statut == 'loue'       %}selected{% endif %}>Loué</option>
+                        </select>
+                        <span class="statut-preview statut-{{ bien.statut }}" id="statut-preview">
+                            {{ bien.statut }}
+                        </span>
+                    </div>
+
+                    <!-- Prix -->
+                    <div class="form-group">
+                        <label>Prix (€)</label>
+                        <input type="number" name="prix" value="{{ bien.prix|int }}" min="0" step="1000" required>
+                    </div>
+
+                    <!-- Surface -->
+                    <div class="form-group">
+                        <label>Surface (m²)</label>
+                        <input type="number" name="surface" value="{{ bien.surface|int if bien.surface else '' }}" min="0" step="1">
+                    </div>
+
+                    <!-- Nb pièces -->
+                    <div class="form-group">
+                        <label>Nombre de pièces</label>
+                        <input type="number" name="nb_pieces" value="{{ bien.nb_pieces if bien.nb_pieces else '' }}" min="0" step="1">
+                    </div>
+
+                    <hr class="divider full">
+
+                    <!-- Ville -->
+                    <div class="form-group">
+                        <label>Ville</label>
+                        <input type="text" name="ville" value="{{ bien.ville }}" required>
+                    </div>
+
+                    <!-- Adresse -->
+                    <div class="form-group">
+                        <label>Adresse</label>
+                        <input type="text" name="adresse" value="{{ bien.adresse or '' }}">
+                    </div>
+
+                    <!-- Description -->
+                    <div class="form-group full">
+                        <label>Description</label>
+                        <textarea name="description">{{ bien.description or '' }}</textarea>
+                    </div>
+
+                </div>
+
+                <div class="form-actions">
+                    <a href="/agent" class="btn-cancel">Annuler</a>
+                    <button type="submit" class="btn-save">Enregistrer les modifications</button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateStatutPreview() {
+    const select  = document.getElementById('statut-select');
+    const preview = document.getElementById('statut-preview');
+    const labels  = { disponible: 'Disponible', vendu: 'Vendu', loue: 'Loué' };
+    preview.className = 'statut-preview statut-' + select.value;
+    preview.textContent = labels[select.value] || select.value;
+}
+</script>
+
+</body>
+</html>
