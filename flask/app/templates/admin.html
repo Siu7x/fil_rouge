@@ -13,7 +13,7 @@
 <header>
     <div class="header-inner">
         <div>
-            <h1>Ymmo .</h1>
+            <h1>Ymmo</h1>
             <p>Panel Administration</p>
         </div>
         <div style="display: flex; gap: 16px; align-items: center;">
@@ -227,7 +227,6 @@
 </main>
 
 <script>
-/* ── Changement d'onglets harmonisé ────────────────────────────────────── */
 function switchTab(name, btn) {
     // Réinitialisation des boutons de navigation d'onglets
     document.querySelectorAll('.tab-btn').forEach(b => {
@@ -235,16 +234,14 @@ function switchTab(name, btn) {
         b.style.borderColor = "transparent";
     });
     
-    // Activation du bouton cliqué avec les styles du CSS
     btn.className = "tab-btn filters button";
     btn.style.borderColor = "initial";
 
-    // Affichage/Masquage des panneaux
     document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
     document.getElementById('tab-' + name).style.display = 'block';
 }
 
-/* ── Filtre biens ────────────────────────────────────────────────────────── */
+/* filtre biens */
 function filterBiens() {
     const q      = document.getElementById('search-biens').value.toLowerCase();
     const statut = document.getElementById('filter-statut-b').value;
@@ -262,7 +259,7 @@ function filterBiens() {
     buildPagination('biens', '.bien-row', n);
 }
 
-/* ── Filtre offres ───────────────────────────────────────────────────────── */
+/* filtre offres */
 function filterOffres() {
     const q      = document.getElementById('search-offres').value.toLowerCase();
     const statut = document.getElementById('filter-statut-o').value;
@@ -277,7 +274,6 @@ function filterOffres() {
     document.getElementById('count-offres').textContent = n + ' résultat' + (n > 1 ? 's' : '');
 }
 
-/* ── Pagination (Style Load More / Buttons adaptés à style.css) ─────────── */
 const PAGE_SIZE = 25;
 const pages = {};
 
@@ -313,14 +309,11 @@ function goPage(name, selector, p) {
     else if (p === 1) pages[name] = (pages[name]||1) + 1;
     else pages[name] = p;
     
-    // On relance le filtre pour ré-appliquer la pagination proprement
     if(name === 'biens') filterBiens();
     if(name === 'offres') filterOffres();
 }
 
-/* ── Initialisation ── */
 document.addEventListener('DOMContentLoaded', () => {
-    // Force l'état visuel initial du premier onglet actif
     const initialTabBtn = document.querySelector('.tab-btn');
     if (initialTabBtn) switchTab('biens', initialTabBtn);
     
